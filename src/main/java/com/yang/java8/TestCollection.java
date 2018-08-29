@@ -29,7 +29,6 @@ public class TestCollection {
 //            }
 //        });
         list.sort((a1,a2)->a1.compareTo(a2));
-        list.stream().filter().map()
         System.out.println(list);
 //        Collections.sort(map, new Comparator<Map<String ,String >>() {
 //            public int compare(Map a1, Map a2){

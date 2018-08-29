@@ -1,5 +1,9 @@
 package com.yang.java8.proxy;
 
+import sun.misc.ProxyGenerator;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 
 /**
@@ -21,6 +25,7 @@ public class Test {
         }
 
         Object target = Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new YangInvocationHandle(yangService));
+
         YangService ss = (YangService) target;
         ss.likeSomthing("mm");
 
@@ -29,6 +34,27 @@ public class Test {
 //        EchoService echoServiceProxy = (EchoService) target;
 //        //接口必须有实现类，否则会报错。dubbo是通过在filte中拦截，这里是通过方法名判断直接返回实现的
 //        System.out.println(echoServiceProxy.$echo("echo"));
+
+
+
+
+        String path = "./aaa.class";
+        byte[] classFile = ProxyGenerator.generateProxyClass("$Proxy0",interfaces);
+        FileOutputStream out = null;
+
+        try {
+            out = new FileOutputStream(path);
+            out.write(classFile);
+            out.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
 
     }
