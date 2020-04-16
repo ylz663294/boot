@@ -2,11 +2,13 @@ package com.yang.redis;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -23,6 +25,11 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.CollectionUtils;
 
+/**
+ * redis队列实现秒杀
+ */
+
+
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -37,11 +44,15 @@ public class Miaosha {
     public void init() {
         List<String> list = new ArrayList<>(100);
         for (int i = 0; i < 100; i++) {
-            list.add("1");
+            list.add(String.valueOf(i));
         }
         //模拟商品Id和库存
         listRPushByJson("5", list, 1000);
-        executorService = Executors.newFixedThreadPool(800);
+        //executorService = Executors.newFixedThreadPool(800);
+        executorService = new ThreadPoolExecutor(
+            800, 1000, 1, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(10),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
     }
 
     @Test
@@ -57,8 +68,9 @@ public class Miaosha {
                 } catch (InterruptedException | BrokenBarrierException e) {
                     e.printStackTrace();
                 }
-                if (listLPopByJson("5", String.class) != null) {
-                    System.out.println("成功的线程name: " + Thread.currentThread().getName());
+                String goodsid = listLPopByJson("5", String.class);
+                if (goodsid != null) {
+                    System.out.println("成功的线程name: " + Thread.currentThread().getName()+";goodsId:"+goodsid);
                     successNum.getAndIncrement();
                 } else {
                     failNum.getAndIncrement();
@@ -113,6 +125,5 @@ public class Miaosha {
             log.error("listRPushByJson error key:{} valueList:{} expired:{}", key, valueList, expiredSeconds, e);
         }
     }
-
 
 }
